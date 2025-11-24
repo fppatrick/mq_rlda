@@ -242,17 +242,3 @@ recon <- function(wts, fqs) {
   }
   as.numeric(FBmat %*% wts)
 }
-
-r.cond.ar2 <- function(N, nj=1, r.phi1, r.phi2, r.sig2){
-        X = ts(matrix(0,ncol=nj,nrow=N))
-        parms = matrix(0,ncol=nj,nrow=3)
-        for(j in 1:nj){
-                phi1 = runif(1,min=min(r.phi1), max=max(r.phi1) )
-                phi2 = runif(1,min=min(r.phi2), max=max(r.phi2) )
-                sigma2 = runif(1,min=min(r.sig2), max=max(r.sig2) )
-                Xj = arima.sim(list(order=c(2,0,0),ar=c(phi1,phi2)),sd=sqrt(sigma2),n=N)
-                X[,j] = Xj
-                parms[,j] = c(phi1,phi2,sigma2)
-        }
-        z=list(X=X, parms=parms)
-}
