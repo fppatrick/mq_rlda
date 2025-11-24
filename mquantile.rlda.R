@@ -42,15 +42,20 @@ lperd.mtm <- function(x, tau) {
   }
 
   # Smooth the periodogram across frequency (predict at original freq locations)
-  ss <- stats::smooth.spline(x = freq, y = raw_spec)
+  #ss <- stats::smooth.spline(x = freq, y = raw_spec)
   #spec_smoothed <- stats::predict(ss, freq)$y
-
   # Avoid non-positive values before log
-  ss$yin[ss$yin <= 0] <- .Machine$double.eps
+  spec_smoothed <- smooth(raw_spec)
+  spec_smoothed[spec_smoothed <= 0] <- .Machine$double.eps
 
-  lspec <- log(ss$yin)
+  lspec <- log(spec_smoothed)
 
-  list(freq = freq, spec = ss$yin, lspec = lspec)
+  spec <- c(spec_smoothed, rev(spec_smoothed))
+  lspec <- c(lspec, rev(lspec))
+
+  freq <- 2 * pi * seq_len(length(x)) / length(x)
+
+  list(freq = freq, spec = spec, lspec = lspec)
 }
 
 #' Cepstral coefficients from (smoothed) log-periodogram
@@ -116,7 +121,6 @@ cep.get <- function(y, x, tau) {
   D.hat$y <- y
   D.hat
 }
-
 #' Choose optimal number of cepstral coefficients by leave-one-out LDA CV
 #'
 #' @param data data.frame returned by cep.get (with columns C0..C_{N-1} and y)
@@ -192,7 +196,7 @@ cep.lda <- function(y, x, tau, xNew = NULL, L = FALSE, mcep = 10, cv = FALSE, to
 
     # reconstruct discriminant functions over frequency grid
     Q <- min(Lopt, length(unique(y)) - 1L)
-    freq <- seq(from = 0, to = pi, by = 1 / (ncol(D.hat0) - 1L))
+    freq <- seq(from = 0, to = 0.5, by = 1 / (ncol(D.hat0) - 1L))
     dsc <- matrix(NA_real_, nrow = length(freq), ncol = Q)
     if (Q >= 1L) {
       for (q_i in seq_len(Q)) {
